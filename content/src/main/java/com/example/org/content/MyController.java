@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -92,4 +93,22 @@ public class MyController {
 	public void deleteStudent(@PathVariable long rollno) {
 		studentRepository.deleteByRollNo(rollno);
 	}
+	
+	@RequestMapping(
+			  value ="/search/{searchItem}", 
+			  produces = { "application/json", "application/xml" }, 
+			  method = RequestMethod.GET)
+	public ResponseEntity<?> searchStudent(@PathVariable String searchItem) throws Exception {
+		
+		Specification<Student> rollNoLike = 
+			      (root, query, criteriaBuilder) -> 
+			         criteriaBuilder.like(root.get("rollNo").as(String.class), "%"+searchItem+"%");
+		Optional<List<Student>> studentList = Optional.ofNullable(studentRepository.findAll(rollNoLike));
+
+		if (!studentList.isPresent())
+			throw new Exception();
+
+		return new ResponseEntity<>(studentList.get(), HttpStatus.OK);
+	}
+	
 }
